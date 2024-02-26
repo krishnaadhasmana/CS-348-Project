@@ -20146,3 +20146,5 @@ react-flask-example/node_modules/regexp.prototype.flags/package.json
 react-flask-example/node_modules/regexp.prototype.flags/polyfill.js
 react-flask-example/node_modules/regexp.prototype.flags/README.md
 react-flask-example/node_modules/regexp.prototype.flags/shim.js
+.DS_Store
+react-flask-example/.DS_Store
