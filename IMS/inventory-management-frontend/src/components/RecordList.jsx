@@ -110,6 +110,8 @@ fetch('http://127.0.0.1:5000/api/customers')
     });
     const newSales = sales.filter((el) => el._id !== id);
     setSales(newSales);
+    // reload the page
+    window.location.reload();
   }
 
   // This method will map out the sales on the table
