@@ -45,8 +45,6 @@ const Record = (props) => (
 
 export default function RecordList() {
 
-
-
 const [customers, setCustomers] = useState([]);
 const [products, setProducts] = useState([]);
 const [stores, setStores] = useState([]);

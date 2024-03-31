@@ -2,7 +2,7 @@
 
 - **Concept**: A system designed for retail businesses to manage inventory across multiple locations, track sales transactions, and analyze customer buying patterns.
 
-- **Main Table**: `Sales` (sale_id, product_id, quantity_sold, sale_date, store_id, customer_id)
+- **Main Table**: `Sales` (_id, product_id, quantity_sold, sale_date, store_id, customer_id)
     - This table records each sale, including which product was sold, in what quantity, when, at which store, and by which customer.
 
 - **Supporting Tables**:
@@ -15,9 +15,15 @@
 
 - **Requirement 1**: An interface for entering and managing sales. This interface will allow staff to add new sales, process returns, and adjust inventory levels accordingly. Each transaction will link to a specific customer, allowing for personalized sales analytics and loyalty program management.
 
-- **Requirement 2**: A reporting interface that offers detailed insights into sales performance by product, category, store location, and customer. This can include tracking high-demand products, identifying loyal customers, and understanding buying patterns to drive sales strategies and loyalty programs.
+- **Requirement 2**: A reporting interface that allows the user to select a customer and generate a report to view their purchase history, including the products they bought, and their quantities, the most commonly purchased product category, most visited store and the total amount spent at each store. 
 
 
 ## Startup
 Mongo start - brew services start mongodb-community@7.0
+
 Mongo stop - brew services start mongodb-community@7.0
+
+```
+cd inventory-management-frontend
+npm run dev & cd ../inventory-management-backend && flask run
+```
