@@ -11,6 +11,15 @@ from mongoengine import (
 from pymongo import MongoClient
 from bson import json_util
 from bson.objectid import ObjectId
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+user = os.getenv('MONGO_USER')
+password = os.getenv('MONGO_PASS')
+uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
+
+# client = MongoClient("localhost", 27017)  # Localhost
 
 
 # Initialize Flask and CORS
@@ -18,7 +27,8 @@ app = Flask(__name__)
 CORS(app)
 
 # pyMongo Database Connection
-client = MongoClient("localhost", 27017)
+#! client = MongoClient("localhost", 27017)
+client = MongoClient(uri)
 db = client.SaleTrackerDB
 
 # Initiliaze Indexes
@@ -26,7 +36,8 @@ db.sales.create_index([("customer_id", 1)])
 db.products.create_index([("product_id", 1)])
 
 # MongoEngine Database Connection
-connect("SaleTrackerDB", host="localhost", port=27017)
+#! connect("SaleTrackerDB", host="localhost", port=27017)
+connect("SaleTrackerDB", host=uri)
 
 
 # MongoEngine Models
