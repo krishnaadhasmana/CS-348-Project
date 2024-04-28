@@ -14,6 +14,11 @@ from bson.objectid import ObjectId
 import os
 from dotenv import load_dotenv
 
+
+# Initialize Flask and CORS
+app = Flask(__name__)
+cors = CORS(app, resources={r"/api/*": {"origins": "https://cs-348-project.vercel.app/"}})
+
 load_dotenv()
 user = os.getenv('MONGO_USER')
 password = os.getenv('MONGO_PASS')
@@ -21,10 +26,6 @@ uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrit
 
 # client = MongoClient("localhost", 27017)  # Localhost
 
-
-# Initialize Flask and CORS
-app = Flask(__name__)
-cors = CORS(app, resources={r"/api/*": {"origins": "https://cs-348-project.vercel.app/"}})
 
 # pyMongo Database Connection
 #! client = MongoClient("localhost", 27017)
