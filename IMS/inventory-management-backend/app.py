@@ -24,7 +24,7 @@ uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrit
 
 # Initialize Flask and CORS
 app = Flask(__name__)
-CORS(app)
+cors = CORS(app, resources={r"/api/*": {"origins": "https://cs-348-project.vercel.app/"}})
 
 # pyMongo Database Connection
 #! client = MongoClient("localhost", 27017)
