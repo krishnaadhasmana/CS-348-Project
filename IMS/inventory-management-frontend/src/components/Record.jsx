@@ -20,7 +20,8 @@ export default function Record() {
       setIsNew(false);
       console.log(id);
       const response = await fetch(
-        `http://127.0.0.1:5000/api/sales/${params.id.toString()}`,
+        `https://eng-flux-421708.uc.r.appspot.com/api/sales/${params.id.toString()}`,
+        // `http://127.0.0.1:5000/api/sales/${params.id.toString()}`,
         {
           method: "GET",
         }
@@ -67,7 +68,9 @@ export default function Record() {
       let response;
       if (isNew) {
         // if we are adding a new record we will POST to /record.
-        response = await ("http://127.0.0.1:5000/api/sales", {
+        response = await fetch("https://eng-flux-421708.uc.r.appspot.com/api/sales", {
+        // response = await ("http://127.0.0.1:5000/api/sales", {
+
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -76,7 +79,8 @@ export default function Record() {
         });
       } else {
         // if we are updating a record we will PATCH to /record/:id.
-        response = await fetch(`http://127.0.0.1:5000/api/sales/${params.id}`, {
+        response = await fetch(`https://eng-flux-421708.uc.r.appspot.com/api/sales/${params.id}`, {
+        // response = await fetch(`http://127.0.0.1:5000/api/sales/${params.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -108,17 +112,20 @@ export default function Record() {
 
   useEffect(() => {
     // Fetch Products
-    fetch("http://127.0.0.1:5000/api/products")
+    fetch("https://eng-flux-421708.uc.r.appspot.com/api/products")
+    // fetch("http://127.0.0.1:5000/api/products")
       .then((res) => res.json())
       .then((data) => setProducts(data));
 
     // Fetch Stores
-    fetch("http://127.0.0.1:5000/api/stores")
+    fetch("https://eng-flux-421708.uc.r.appspot.com/api/stores")
+    // fetch("http://127.0.0.1:5000/api/stores")
       .then((res) => res.json())
       .then((data) => setStores(data));
 
     // Fetch Customers
-    fetch("http://127.0.0.1:5000/api/customers")
+    fetch("https://eng-flux-421708.uc.r.appspot.com/api/customers")
+    // fetch("http://127.0.0.1:5000/api/customers")
       .then((res) => res.json())
       .then((data) => setCustomers(data));
   }, []);

@@ -89,17 +89,20 @@ export default function RecordList() {
 
   useEffect(() => {
     // Fetch Products
-    fetch("http://127.0.0.1:5000/api/products")
+    fetch("https://eng-flux-421708.uc.r.appspot.com/api/products")
+    // fetch("http://127.0.0.1:5000/api/products")
       .then((res) => res.json())
       .then((data) => setProducts(data));
 
     // Fetch Stores
-    fetch("http://127.0.0.1:5000/api/stores")
+    fetch("https://eng-flux-421708.uc.r.appspot.com/api/stores")
+    // fetch("http://127.0.0.1:5000/api/stores")
       .then((res) => res.json())
       .then((data) => setStores(data));
 
     // Fetch Customers
-    fetch("http://127.0.0.1:5000/api/customers")
+    fetch("https://eng-flux-421708.uc.r.appspot.com/api/customers")
+    // fetch("http://127.0.0.1:5000/api/customers")
       .then((res) => res.json())
       .then((data) => setCustomers(data));
   }, []);
@@ -107,7 +110,8 @@ export default function RecordList() {
   // This method fetches the sales from the database.
   useEffect(() => {
     async function getSales() {
-      const response = await fetch(`http://127.0.0.1:5000/api/sales`);
+      const response = await fetch(`https://eng-flux-421708.uc.r.appspot.com/api/sales`);
+      // const response = await fetch(`http://127.0.0.1:5000/api/sales`);
       if (!response.ok) {
         const message = `An error occurred: ${response.statusText}`;
         console.error(message);
@@ -142,7 +146,8 @@ export default function RecordList() {
   // This method will delete a sale
   async function deleteSale(id) {
     id = id.toString();
-    await fetch(`http://127.0.0.1:5000/api/sales/${id}`, {
+    await fetch(`https://eng-flux-421708.uc.r.appspot.com/api/sales/${id}`, {
+    // await fetch(`http://127.0.0.1:5000/api/sales/${id}`, {
       method: "DELETE",
     });
     const newSales = sales.filter((el) => el._id !== id);
@@ -193,7 +198,8 @@ export default function RecordList() {
       let response;
       // if we are adding a new record we will POST to /record.
       response = await fetch(
-        `http://127.0.0.1:5000/api/customer-report/${form.customerId}`,
+        `https://eng-flux-421708.uc.r.appspot.com/api/customer-report/${form.customerId}`,
+        // `http://127.0.0.1:5000/api/customer-report/${form.customerId}`,
         {
           method: "GET",
         }
