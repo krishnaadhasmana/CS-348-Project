@@ -19,10 +19,11 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "https://cs-348-project.vercel.app/"}})
 
-load_dotenv()
-user = os.getenv('MONGO_USER')
-password = os.getenv('MONGO_PASS')
-uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
+# load_dotenv()
+# user = os.getenv('MONGO_USER')
+# password = os.getenv('MONGO_PASS')
+# uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
+uri = "mongodb+srv://krishnadhasmana4:b9NYfKHcm2lAviDW@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
 
 # client = MongoClient("localhost", 27017)  # Localhost
 
@@ -378,7 +379,12 @@ def handle_sales():
             data_dict["_id"] = {"$oid": str(entry.id)}
             data.append(data_dict)
         return jsonify(data)
-
+    
+    
+@app.route("/")
+def home():
+    return jsonify(message="Welcome to the Sale Tracker API")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=5000)
+
