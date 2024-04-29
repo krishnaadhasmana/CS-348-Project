@@ -104,6 +104,7 @@ def reduce_product_quantity(product_id, quantity_sold):
     return jsonify(message="Product stock level reduced"), 201
 
 
+# stored procedures
 stored_query_1 = [
     {"$match": {"customer_id": "@customer_id"}},
     {
@@ -111,46 +112,38 @@ stored_query_1 = [
             "from": "products",
             "localField": "product_id",
             "foreignField": "product_id",
-            "as": "product_info",
+            "as": "product_info"
         }
     },
     {"$unwind": "$product_info"},
     {
         "$group": {
+            "_id": "$store_id",
+            "count": {"$sum": 1},
+            "sales": {"$push": {"customer_id": "$customer_id"}}
+        }
+    },
+    {
+        "$sort": {"count": -1}
+    },
+    {
+        "$group": {
             "_id": None,
-            "SalesList": {"$push": "$$ROOT"},
-            "store_count": {
-                "$push": {"store_id": "$store_id", "count": 1}
-            },
-            "category_counts": {
-                "$push": "$product_info.category"
-            },
+            "most_visited_store": {"$first": "$_id"},
+            "store_count": {"$first": "$count"},
+            "SalesList": {"$first": "$sales"}
         }
     },
     {
         "$project": {
-            "SalesList": 1,
             "most_visited_store": {
-                "$arrayElemAt": [
-                    {"$sortArray": {"input": "$store_count", "sortBy": {"count": -1}}},
-                    0,
-                ]
-            },
-            "favorite_category":                
-                {
-                "$arrayElemAt": [
-                    {
-                        "$sortArray": {
-                            "input": "$category_count",
-                            "sortBy": {"count": -1},
-                        }
-                    },
-                    0,
-                ]
-            },
+                    "store_id": "$most_visited_store",
+                    "count": "$store_count"
+                },
         }
-    },
+    }
 ]
+
 
 stored_query_2 = [
     {"$match": {"customer_id": "@customer_id"}},
@@ -199,6 +192,36 @@ stored_query_2 = [
     },
 ]
 
+stored_query_3 = [
+    {"$match": {"customer_id": "@customer_id"}},
+    {
+        "$lookup": {
+            "from": "products",
+            "localField": "product_id",
+            "foreignField": "product_id",
+            "as": "product_info",
+        }
+    },
+    {"$unwind": "$product_info"},
+    {
+        "$group": {
+            "_id": None,
+            "SalesList": {"$push": "$$ROOT"},
+            "store_count": {
+                "$push": {"store_id": "$store_id", "count": 1}
+            },
+            "category_counts": {
+                "$push": "$product_info.category"
+            },
+        }
+    },
+    {
+        "$project": {
+            "SalesList": 1
+        }
+    },
+]
+
 
 # * Parametrized Queries (using pyMongo)
 
@@ -215,15 +238,21 @@ def customer_report(customer_id):
     for stage in stored_query_2:
         if "$match" in stage:
             stage["$match"]["customer_id"] = query_map["@customer_id"]
+            
+    for stage in stored_query_3:
+        if "$match" in stage:
+            stage["$match"]["customer_id"] = query_map["@customer_id"]
+
 
     with client.start_session() as session:
         with session.start_transaction(read_concern=ReadConcern("majority")):
             result1 = list(db.sales.aggregate(stored_query_1, session=session))    
             result2 = list(db.sales.aggregate(stored_query_2, session=session))
+            result3 = list(db.sales.aggregate(stored_query_3, session=session))
             session.commit_transaction()
 
     # Combining results
-    combined_results = {"Stats": result1, "SpendingPerStore": result2}
+    combined_results = {"Stats": result1, "SpendingPerStore": result2, "SalesList": result3}
 
     combined_results = json_util.dumps(combined_results)
     return combined_results

@@ -137,7 +137,7 @@ export default function RecordList() {
         };
       });
       console.log(enrichedSales);
-      Promise.all(enrichedSales);
+      Promise.all(enrichedSales)
       console.log("Enriched Sales: (after promise) ", enrichedSales);
 
       setSales(enrichedSales);
@@ -259,7 +259,7 @@ export default function RecordList() {
   async function getCustomerSales(response) {
     let res = await response;
     console.log("Res: \n", res);
-    const sales = await res.Stats[0].SalesList;
+    const sales = await res.SalesList[0].SalesList;
     // add the products, stores, and customers to the sales
     const enrichedSales = sales.map((sale) => {
       const product = products.find(
