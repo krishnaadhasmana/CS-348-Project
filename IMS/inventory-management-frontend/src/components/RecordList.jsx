@@ -118,8 +118,9 @@ export default function RecordList() {
         return;
       }
       const sales = await response.json();
+      console.log("sryg \n", sales);
       // add the products, stores, and customers to the sales
-      const enrichedSales = sales.map((sale) => {
+      const enrichedSales =  await sales.map((sale) => {
         const product = products.find(
           (product) => product.product_id === sale.product_id
         );
@@ -135,7 +136,7 @@ export default function RecordList() {
           customer_name: customer ? customer.name : "", // Handle missing customer
         };
       });
-      console.log(sales);
+      console.log(enrichedSales);
 
       setSales(enrichedSales);
     }
