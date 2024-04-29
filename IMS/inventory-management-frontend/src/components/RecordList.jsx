@@ -137,7 +137,7 @@ export default function RecordList() {
         };
       });
       console.log(enrichedSales);
-      Promise.all(enrichedSales)
+      // Promise.all(enrichedSales)
       console.log("Enriched Sales: (after promise) ", enrichedSales);
 
       setSales(enrichedSales);
