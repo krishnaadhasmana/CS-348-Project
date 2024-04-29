@@ -1,0 +1,4 @@
+env_variables:
+  MONGO_USER: 'krishnadhasmana4'
+  MONGO_PASS: 'b9NYfKHcm2lAviDW'
+  env: 'development'

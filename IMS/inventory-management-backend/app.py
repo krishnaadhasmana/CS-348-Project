@@ -2,31 +2,27 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from mongoengine import (
     connect,
+    get_connection,
     Document,
     StringField,
     IntField,
     ReferenceField,
     DateTimeField,
 )
-from pymongo import MongoClient
+from pymongo import MongoClient, read_concern
 from bson import json_util
 from bson.objectid import ObjectId
 import os
-from dotenv import load_dotenv
 
 
 # Initialize Flask and CORS
 app = Flask(__name__)
-cors = CORS(app, resources={r"/api/*": {"origins": "https://cs-348-project.vercel.app/"}})
+cors = CORS(app)
 
-# load_dotenv()
-# user = os.getenv('MONGO_USER')
-# password = os.getenv('MONGO_PASS')
-# uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
-uri = "mongodb+srv://krishnadhasmana4:b9NYfKHcm2lAviDW@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
-
-# client = MongoClient("localhost", 27017)  # Localhost
-
+user = os.environ.get('MONGO_USER')
+password = os.environ.get('MONGO_PASS')
+uri = f"mongodb+srv://{user}:{password}@cs348-ims.ug2ct7l.mongodb.net/?retryWrites=true&w=majority"
+ReadConcern = read_concern.ReadConcern
 
 # pyMongo Database Connection
 #! client = MongoClient("localhost", 27017)
@@ -69,6 +65,15 @@ class sales(Document):
     store_id = IntField(required=True)
     quantity_sold = IntField(required=True)
     sale_date = StringField(required=True)
+
+
+# MongoEngine Transaction Function
+def start_transaction():
+    connection = get_connection()
+    session = connection.start_session()
+    # Start a transaction
+    session.start_transaction()
+    return session
 
 
 # pyMongo Functions
@@ -194,8 +199,6 @@ stored_query_2 = [
     },
 ]
 
-stored_query_3 = []
-
 
 # * Parametrized Queries (using pyMongo)
 
@@ -213,8 +216,11 @@ def customer_report(customer_id):
         if "$match" in stage:
             stage["$match"]["customer_id"] = query_map["@customer_id"]
 
-    result1 = list(db.sales.aggregate(stored_query_1))
-    result2 = list(db.sales.aggregate(stored_query_2))
+    with client.start_session() as session:
+        with session.start_transaction(read_concern=ReadConcern("majority")):
+            result1 = list(db.sales.aggregate(stored_query_1, session=session))    
+            result2 = list(db.sales.aggregate(stored_query_2, session=session))
+            session.commit_transaction()
 
     # Combining results
     combined_results = {"Stats": result1, "SpendingPerStore": result2}
@@ -226,17 +232,25 @@ def customer_report(customer_id):
 @app.route("/api/sales/<_id>", methods=["DELETE"])
 def delete_sale(_id):
     _id = ObjectId(_id)
-    sale = db.sales.find_one({"_id": _id})
-    if sale is None:
-        return jsonify(message="Sale not found"), 404
-    db.sales.delete_one({"_id": _id})
+    with client.start_session() as session:
+        with session.start_transaction(read_concern=ReadConcern("majority")):
+            sale = db.sales.find_one({"_id": _id})
+            if sale is None:
+                return jsonify(message="Sale not found"), 404
+            db.sales.delete_one({"_id": _id})
+            session.commit_transaction()
     return jsonify(message="Sale deleted"), 200
 
 
 @app.route("/api/sales/<_id>", methods=["GET"])
 def get_sale(_id):
     _id = ObjectId(_id)
-    res = db.sales.find_one({"_id": _id})
+
+    with client.start_session() as session:
+        with session.start_transaction(read_concern=ReadConcern("majority")):
+            res = db.sales.find_one({"_id": _id})
+            session.commit_transaction()
+
     if res is None:
         return jsonify(message="Sale not found"), 404
     json_data = json_util.dumps(res)
@@ -259,32 +273,36 @@ def update_sale(_id):
         customer_id = None
     else:
         customer_id = int(customer_id)
-    sale = db.sales.find_one({"_id": _id})
-    if sale is None:
-        return jsonify(message="Sale not found"), 404
 
-    # check if enough stock available
-    product = db.products.find_one({"product_id": product_id})
-    if product is None:
-        return jsonify(message="Product not found"), 404
-    current_quantity = product.get("stock_level")
-    current_quantity = int(current_quantity)
-    if current_quantity < quantity_sold:
-        return jsonify(message="Not enough stock available"), 400
+    with client.start_session() as session:
+        with session.start_transaction(read_concern=ReadConcern("majority")):
+            sale = db.sales.find_one({"_id": _id})
+            if sale is None:
+                return jsonify(message="Sale not found"), 404
 
-    # update entry
-    db.sales.update_one(
-        {"_id": _id},
-        {
-            "$set": {
-                "product_id": product_id,
-                "quantity_sold": quantity_sold,
-                "sale_date": sale_date,
-                "store_id": store_id,
-                "customer_id": customer_id,
-            }
-        },
-    )
+            # check if enough stock available
+            product = db.products.find_one({"product_id": product_id})
+            if product is None:
+                return jsonify(message="Product not found"), 404
+            current_quantity = product.get("stock_level")
+            current_quantity = int(current_quantity)
+            if current_quantity < quantity_sold:
+                return jsonify(message="Not enough stock available"), 400
+
+            # update entry
+            db.sales.update_one(
+                {"_id": _id},
+                {
+                    "$set": {
+                        "product_id": product_id,
+                        "quantity_sold": quantity_sold,
+                        "sale_date": sale_date,
+                        "store_id": store_id,
+                        "customer_id": customer_id,
+                    }
+                },
+            )
+            session.commit_transaction()
     return jsonify(message="Sale updated"), 200
 
 
@@ -305,86 +323,96 @@ def get_sales():
         else:
             customer_id = int(customer_id)
 
-        # check if enough stock available
-        product = db.products.find_one({"product_id": product_id})
-        if product is None:
-            return jsonify(message="Product not found"), 404
-        current_quantity = product.get("stock_level")
-        current_quantity = int(current_quantity)
-        if current_quantity < quantity_sold:
-            return jsonify(message="Not enough stock available"), 400
+        with client.start_session() as session:
+            with session.start_transaction(read_concern=ReadConcern("majority")):
+                # check if enough stock available
+                product = db.products.find_one({"product_id": product_id})
+                if product is None:
+                    return jsonify(message="Product not found"), 404
+                current_quantity = product.get("stock_level")
+                current_quantity = int(current_quantity)
+                if current_quantity < quantity_sold:
+                    return jsonify(message="Not enough stock available"), 400
 
-        # Insert data into the sales collection
-        db.sales.insert_one(
-            {
-                "product_id": product_id,
-                "quantity_sold": quantity_sold,
-                "sale_date": sale_date,
-                "store_id": store_id,
-                "customer_id": customer_id,
-            }
-        )
+                # Insert data into the sales collection
+                db.sales.insert_one(
+                    {
+                        "product_id": product_id,
+                        "quantity_sold": quantity_sold,
+                        "sale_date": sale_date,
+                        "store_id": store_id,
+                        "customer_id": customer_id,
+                    }
+                )
 
-        # Increase customer's loyalty points
-        increase_loyalty_points(customer_id)
-        # reduce product quantity
-        reduce_product_quantity(product_id, quantity_sold)
+                # Increase customer's loyalty points
+                increase_loyalty_points(customer_id)
+                # reduce product quantity
+                reduce_product_quantity(product_id, quantity_sold)
 
-        print(data)
-
+                print(data)
+                session.commit_transaction()
         return jsonify(message="New sale added"), 205
 
 
 # * ORM/ODM Queries (using MongoEngine)
 @app.route("/api/products", methods=["GET"])
 def get_products():
+    session = start_transaction()
     res = products.objects.all()
     data = []
     for entry in res:
         data_dict = entry.to_mongo().to_dict()
         data_dict["_id"] = {"$oid": str(entry.id)}
         data.append(data_dict)
+    session.end_session()
     return jsonify(data)
 
 
 @app.route("/api/customers", methods=["GET"])
 def get_customers():
+    session = start_transaction()
     res = customers.objects.all()
     data = []
     for entry in res:
         data_dict = entry.to_mongo().to_dict()
         data_dict["_id"] = {"$oid": str(entry.id)}
         data.append(data_dict)
+    session.end_session()
     return jsonify(data)
 
 
 @app.route("/api/stores", methods=["GET"])
 def get_stores():
+    session = start_transaction()
     res = stores.objects.all()
     data = []
     for entry in res:
         data_dict = entry.to_mongo().to_dict()
         data_dict["_id"] = {"$oid": str(entry.id)}
         data.append(data_dict)
+    session.end_session()
     return jsonify(data)
 
 
 @app.route("/api/sales", methods=["POST", "GET"])
 def handle_sales():
     if request.method == "GET":
+        session = start_transaction()
         res = sales.objects.all()
         data = []
         for entry in res:
             data_dict = entry.to_mongo().to_dict()
             data_dict["_id"] = {"$oid": str(entry.id)}
             data.append(data_dict)
+        session.end_session()
         return jsonify(data)
-    
-    
+
+
 @app.route("/")
 def home():
     return jsonify(message="Welcome to the Sale Tracker API")
 
+
 if __name__ == "__main__":
     app.run(debug=True, host='127.0.0.1', port=5000)
-

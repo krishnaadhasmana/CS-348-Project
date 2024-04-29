@@ -69,7 +69,7 @@ export default function Record() {
       if (isNew) {
         // if we are adding a new record we will POST to /record.
         response = await fetch("https://eng-flux-421708.uc.r.appspot.com/api/sales", {
-        // response = await ("http://127.0.0.1:5000/api/sales", {
+        // response = await fetch("http://127.0.0.1:5000/api/sales", {
 
           method: "POST",
           headers: {

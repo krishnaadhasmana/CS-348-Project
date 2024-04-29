@@ -237,7 +237,6 @@ export default function RecordList() {
 
       if (response.SpendingPerStore) {
         // Convert object to array if necessary
-        console.log("Responfwesbhgkjngsise: ", response.SpendingPerStore);
         const data = Object.entries(response.SpendingPerStore[0]).map(
           ([storeName, amountSpent]) => ({
             storeName,
