@@ -18,7 +18,7 @@
 - **Requirement 2**: A reporting interface that allows the user to select a customer and generate a report to view their purchase history, including the products they bought, and their quantities, the most commonly purchased product category, most visited store and the total amount spent at each store. 
 
 
-## Startup
+## Local Startup
 Mongo start - brew services start mongodb-community@7.0
 
 Mongo stop - brew services start mongodb-community@7.0
@@ -27,3 +27,8 @@ Mongo stop - brew services start mongodb-community@7.0
 cd inventory-management-frontend
 npm run dev & cd ../inventory-management-backend && flask run
 ```
+
+## Deployment
+- **Frontend**: Vercel
+- **Backend**: GCP App Engine
+- **Database**: MongoDB Atlas
